@@ -1,0 +1,17 @@
+$def with (title, text)
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset=utf-8 /> 
+<title>$title</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript"></script>
+<script src="/static/js/jquery.edit.js" type="text/javascript"></script>
+<link rel="stylesheet" href="/static/css/main.css" type="text/css"></link>
+<link rel="shortcut icon" href="/static/favicon.ico"></link>
+</head>
+<body>
+    <header><h1 id="name" contenteditable="true">$title</h1>.txt</header>
+    <section id="message"></section>
+    <section id="editable" contenteditable="true">$:text</section>
+</body>
+</html>
