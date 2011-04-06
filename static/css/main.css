@@ -1,5 +1,35 @@
 body {
     background: #eee;
+    
+}
+nav {
+    display: block;
+    height: 1.2em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 12px;
+}
+
+nav ul {
+    padding: 3px;
+    margin: 0;
+    background: rgba(40, 40, 40, .5);
+    color: #ccc;
+    display: block;
+    border-radius: 0px 0px 0px 3px;
+}
+
+nav li {
+    margin: 0;
+    padding: 5px;
+    display: inline;
+    list-display-style: none;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
 }
 
 #filelist {

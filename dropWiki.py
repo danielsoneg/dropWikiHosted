@@ -5,6 +5,7 @@ import web
 try: import simplejson as json
 except ImportError: import json
 import files
+from db import SQLite as db
 
 urls = (
     '/(.*)', 'dropWiki'
@@ -50,6 +51,7 @@ class dropWiki:
     def GET(self, name):
         if name == "token":
             Files.getToken(web.input()['oauth_token'])
+            UserDB.addUser()
             raise web.seeother('/')#web.input()['oauth_token'])
             #and 'oauth_token' in web.input():
         if Files.access_token == False:
@@ -67,6 +69,8 @@ class dropWiki:
         return render.index(Files.listDir(''))
 
 Files = files.FileModel()
+
+UserDB = db.userDB()
 
 if __name__ == "__main__":
     app.run()

@@ -24,6 +24,8 @@ class FileModel(object):
     def buildAuth(self):
         """docstring for buildAuth"""
         self.config = auth.Authenticator.load_config("config/config.ini")
+        addconfig =  auth.Authenticator.load_config("config/apikeys.ini")
+        self.config.update(addconfig)
         dba = auth.Authenticator(self.config)
         return dba
         
