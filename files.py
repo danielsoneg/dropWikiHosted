@@ -8,50 +8,38 @@ from dropbox import auth, client
 try: import simplejson as json
 except ImportError: import json
 
-dbKey = 'aogfmftpkttfjjn'
-dbSecret = '3zbez46lrbn8qry'
-
 class FileModel(object):
     def __init__(self, path='../'):
         self.dir = path
-        self.updateItems()
-        self.dba = self.buildAuth()
-        self.token = self.dba.obtain_request_token()
-        self.authURL = self.getAuthURL()
-        self.access_token = False
-        self.client = False
-    
-    def buildAuth(self):
-        """docstring for buildAuth"""
-        self.config = auth.Authenticator.load_config("config/config.ini")
-        addconfig =  auth.Authenticator.load_config("config/apikeys.ini")
-        self.config.update(addconfig)
-        dba = auth.Authenticator(self.config)
-        return dba
+
+    def getClient(self):
+        """docstring for getClient"""
+        access_token = self.dba.obtain_access_token(self.token, '')
+        dbc = client.DropboxClient(self.config['server'], self.config['content_server'], self.config['port'], self.dba, self.access_token)
+        return dbc
         
-    def getAuthURL(self):
-        """docstring for getAuthURL"""
-        url = self.dba.build_authorize_url(self.token, 'http://localhost:8080/token')
-        return url
-    
-    def getToken(self,token):
-        self.access_token = self.dba.obtain_access_token(self.token, '')
-        self.client = client.DropboxClient(self.config['server'], self.config['content_server'], self.config['port'], self.dba, self.access_token)
-        return self.access_token
+    def getPath(self, path,client):
+        """docstring for getPath"""
+        self.client = client #convenience
+        t = ''
+        path = "/%s" % path
+        resp = client.metadata("dropbox", path)
+        if resp.data['is_dir']:
+            t = 'index'
+            ret = self.listDir(resp)
+        elif resp.data['mime_type'] == 'text/plain':
+            t = 'text'
+            ret = self.getFile(path[1:])
+        else:
+            t = 'raw'
+            ret = resp.data
+        return (t, ret)
     
     def getFile(self, name):
         f = dropBoxFile(name, '', self.client)
         return f
     
-    def updateItems(self):
-        items = os.listdir(self.dir)
-        items = filter(lambda i: i.endswith('.txt'), items)
-        items = [i[:-4] for i in items]
-        self.items = items
-    
-    def listDir(self,path):
-        path = "/%s" % path
-        resp = self.client.metadata("dropbox", path)
+    def listDir(self,resp):
         data = resp.data
         dirlist = [i['path'][1:] for i in filter(lambda x: 'mime_type' in x and x['mime_type'] == 'text/plain', data['contents'])]
         return dirlist

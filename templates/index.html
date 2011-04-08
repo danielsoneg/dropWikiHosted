@@ -1,4 +1,3 @@
-$def with (items)
 <!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -21,8 +20,9 @@ $def with (items)
     </header>
     <section id="filelist">
         <ul id="files">
-        $for i in items:
-            <li class='gradient' id='$i'><a href="/$i">$i</a></li>
+        {% for i in items %}
+            <li class='gradient' id='{{ i }}'><a href="/{{ i }}">{{ i }}</a></li>
+        {% end %}
         </ul>
     </section>
 </body>

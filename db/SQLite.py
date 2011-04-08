@@ -20,12 +20,12 @@ class userDB(object):
         self.cursor = self.handle.cursor()
         self.created = self.__isCreated()
         
-    def addUser(self, username, token):
+    def addUser(self, username, token, email):
         if not self.created:
             self.__create()
         if str(username) != username or str(token) != token: 
             return False
-        self.cursor.execute('''insert into users(username,token) values(:username,:token)''', {'username':username,'token':token})
+        self.cursor.execute('''insert into users(username,token,email) values(:username,:token,:email)''', {'username':username,'token':token,'email':email})
         if self.cursor.lastrowid == None:
             return False
         else:
@@ -35,16 +35,16 @@ class userDB(object):
     def getUser(self, username):
         if not self.created:
             return False
-        self.cursor.execute('''select token from users where username=:username''', {'username':username})
+        self.cursor.execute('''select token,email from users where username=:username''', {'username':username})
         row = self.cursor.fetchone()
         if not row: 
             return False
-        else: return row[0]
+        else: return row
     
     def __create(self):
         if self.created: return
         """docstring for create"""
-        self.cursor.execute('''create table users(username,token);''')
+        self.cursor.execute('''create table users(username,token,email);''')
         self.handle.commit()
         self.created = True
     
@@ -75,9 +75,9 @@ class userdbTests(unittest.TestCase):
         self.assertEqual(self.users.created,True)
     
     def testAddGetUser(self):
-        self.assertEqual(self.users.addUser('Test','Token'), True)
-        self.assertEqual(self.users.addUser('Test',False),False)
-        self.assertEqual(self.users.getUser('Test'), u'Token')
+        self.assertEqual(self.users.addUser('Test','Token','token@token.com'), True)
+        self.assertEqual(self.users.addUser('Test',False,False),False)
+        self.assertEqual(self.users.getUser('Test')[0], u'Token')
     
 
 if __name__ == '__main__':
