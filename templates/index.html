@@ -20,8 +20,11 @@
     </header>
     <section id="filelist">
         <ul id="files">
-        {% for i in items %}
-            <li class='gradient' id='{{ i }}'><a href="/{{ i }}">{{ i }}</a></li>
+        {% for i in dirs %}
+            <li class='dir gradient' id='{{ i }}'><a href="/{{ i }}">{{ i[i.rfind('/')+1:] }}</a></li>
+        {% end %}
+        {% for i in files %}
+            <li class='gradient' id='{{ i }}'><a href="/{{ i }}">{{ i[i.rfind('/')+1:] }}</a></li>
         {% end %}
         </ul>
     </section>

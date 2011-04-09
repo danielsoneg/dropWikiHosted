@@ -6,7 +6,7 @@ $(document).ready(function() {
         $.ajax({
            type: "POST",
            url: window.location.pathname,
-           data: "text=" + newValue + "&action=write",
+           data: "text=" + escape(newValue) + "&action=write",
            success: editCallback
         });
     });

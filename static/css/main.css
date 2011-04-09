@@ -69,6 +69,10 @@ nav a {
     color: #555;
 }
 
+#filelist li.dir a {
+    margin-left: 40px;
+}
+
 .gradient {
     background-color: #fff;
     background-image: -moz-linear-gradient(top, #fefefe, #fff); /* FF3.6 */
@@ -84,6 +88,18 @@ nav a {
     background-image: -webkit-linear-gradient(#fefefe, #fff); /* Chrome 10+, Saf6 */
     background-image: linear-gradient(top, #fefefe, #fff);
     background-image: none;
+}
+
+.dir {
+	background-image:url(/static/images/folder.gif);
+	background-repeat: no-repeat;
+    background-position: center left;
+}
+
+.dir:hover {
+	background-image:url(/static/images/folder.gif);
+	background-repeat: no-repeat;
+    background-position: center left;
 }
 
 #editable {

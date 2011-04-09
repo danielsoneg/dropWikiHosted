@@ -9,7 +9,13 @@
 <link rel="shortcut icon" href="/static/favicon.ico"></link>
 </head>
 <body>
-    <header><h1 id="name" contenteditable="true">{{title}}</h1>.txt</header>
+    <nav>
+        <ul>
+            <li>dropbox@egd.im</li>
+            <li><a href='/logout'>logout</a></li>
+        </ul>
+    </nav>
+    <header><h1 id="name" contenteditable="true">{{title}}</h1></header>
     <section id="message"></section>
     <section id="editable" contenteditable="true">{{ text }}</section>
 </body>

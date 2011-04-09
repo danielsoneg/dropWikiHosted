@@ -4,6 +4,7 @@
 import os
 import re
 import tempfile
+import logging
 from dropbox import auth, client
 try: import simplejson as json
 except ImportError: import json
@@ -11,12 +12,6 @@ except ImportError: import json
 class FileModel(object):
     def __init__(self, path='../'):
         self.dir = path
-
-    def getClient(self):
-        """docstring for getClient"""
-        access_token = self.dba.obtain_access_token(self.token, '')
-        dbc = client.DropboxClient(self.config['server'], self.config['content_server'], self.config['port'], self.dba, self.access_token)
-        return dbc
         
     def getPath(self, path,client):
         """docstring for getPath"""
@@ -29,19 +24,23 @@ class FileModel(object):
             ret = self.listDir(resp)
         elif resp.data['mime_type'] == 'text/plain':
             t = 'text'
-            ret = self.getFile(path[1:])
+            ret = self.getFile(path[1:],client)
         else:
             t = 'raw'
             ret = resp.data
         return (t, ret)
     
-    def getFile(self, name):
-        f = dropBoxFile(name, '', self.client)
+    def getFile(self, name, client):
+        path, name = name.rsplit('/',1)
+        logging.info('%s / %s' % (path,name))
+        f = dropBoxFile(name, path, client)
         return f
     
     def listDir(self,resp):
         data = resp.data
-        dirlist = [i['path'][1:] for i in filter(lambda x: 'mime_type' in x and x['mime_type'] == 'text/plain', data['contents'])]
+        dirlist = {}
+        dirlist['files'] = [i['path'][1:] for i in filter(lambda x: 'mime_type' in x and x['mime_type'] == 'text/plain', data['contents'])]
+        dirlist['dirs'] = [i['path'][1:] for i in filter(lambda x: x['is_dir'], data['contents'])]
         return dirlist
 
 class FileObject(object):
@@ -159,7 +158,7 @@ class FileObject(object):
 class dropBoxFile( object ):
     def __init__(self, name, sdir,client):
         self.name = name
-        self.dir = sdir
+        self.dir = '/%s' % sdir if sdir else ''
         self.path = "%s/%s" % (self.dir, self.name)
         self.client = client
         self.content = ""
@@ -182,7 +181,7 @@ class dropBoxFile( object ):
         self.handle.name = self.name
         self.handle.write(self.content)
         self.handle.seek(0)
-        self.client.put_file('dropbox', self.dir, self.handle)
+        self.client.put_file('dropbox', self.path, self.handle)
         self.handle.close()
         self.__addLinks()
         return self.__success(self.content)
@@ -190,6 +189,7 @@ class dropBoxFile( object ):
     def __preSave(self):
         """docstring for _preSave"""
         content = self.content
+        content = content.replace('<meta charset="utf-8">','')
         content = content.replace('<br/>', '\n')
         content = content.replace('<div><br>', '\n')
         content = content.replace('<br>', '\n')

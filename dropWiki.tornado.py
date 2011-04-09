@@ -18,6 +18,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
+import tornado.escape
 import os
 from tornado.options import define, options
 
@@ -90,43 +91,77 @@ class LoginHandler(BaseHandler):
         dest = self.get_secure_cookie('destpath')
         self.set_secure_cookie('destpath','')
         self.redirect(dest)
-    
+
+class LogoutHandler(BaseHandler):    
+    """docstring for LoginHandler"""
+    def get(self):
+        
+        self.clear_all_cookies()
+        self.render('templates/blank.html', title='Logged Out', message="You've been logged out!")
 
 class MainHandler(BaseHandler):
-    def __preflight(self,path):
-        logging.info("main")
+    @tornado.web.authenticated
+    def prepare(self):
+        if self.current_user not in Auth.user_tokens:
+            self.set_secure_cookie("user", '')
+            self.redirect("/login?next=%s"% self.request.full_url())
+        oauth_token = Auth.user_tokens[self.current_user]
+        self.dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
+        self.clear_cookie('destpath') 
+
         
+    def __preflight(self, path):
         """Catch-all function to fix paths before we hand them off"""
         path = path.replace('%20',' ')
         return path
-
-    @tornado.web.authenticated
+        
     def get(self,path):
         logging.info("main")
-        if self.current_user not in Auth.user_tokens:
-            self.set_secure_cookie("user", '')
-            self.redirect("/login?next=%s" % path)
-        oauth_token = Auth.user_tokens[self.current_user]
-        dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
         npath = self.__preflight(path)
-        (t, ret) = Files.getPath(npath, dbc)
-        getattr(self, '__get_%s' % t)(ret)
+        (t, ret) = Files.getPath(npath, self.dbc)
+        getattr(self, 'get_%s' % t)(ret)
         
-    def __get_index(self, flist):
-        self.render("templates/index.html", title="Hello", items=flist)
+    def get_index(self, flist):
+        self.render("templates/index.html", title="Hello", dirs=flist['dirs'], files=flist['files'])
         #self.render("templates/blank.html", title="Hello", message="Hi there")
     
-    def __get_text(self, f):
+    def get_text(self, f):
         self.render('templates/page.html', title=f.name, text=f.read())
 
     
-    def __get_raw(self, resp):
+    def get_raw(self, resp):
         self.render("templates/blank.html", title="RAW", message=resp)
     
-    def __get_go(self, url):
+    def get_go(self, url):
         """docstring for go"""
         self.redirect(url)
         pass
+    
+    def post(self, path):
+        if path == "": 
+            logging.info('no path')
+            raise tornado.web.HTTPError(400)
+        try: 
+            action = self.get_argument('action')
+        except:
+            logging.info('no action')
+            raise tornado.web.HTTPError(400)
+        if hasattr(self, 'post_%s' % action):
+            logging.info('Found action %s'% action)
+            status = getattr(self, 'post_%s' %action)(path)
+            logging.info(status)
+            self.write(status)
+        else:
+            raise tornado.web.HTTPError(400)
+    
+    def post_write(self,path):
+        logging.info('write')
+        content = self.get_argument('text')
+        content = tornado.escape.xhtml_unescape(content)
+        logging.info(content)
+        f = Files.getFile(path,self.dbc)
+        status = f.write(content)
+        return status
 
 def main():
     tornado.options.parse_command_line()
@@ -138,6 +173,7 @@ def main():
     }
     application = tornado.web.Application([
         (r"/login", LoginHandler),
+        (r'/logout', LogoutHandler),
         (r"/(.*?)", MainHandler),
     ],**settings)
     http_server = tornado.httpserver.HTTPServer(application)
