@@ -32,7 +32,6 @@ class FileModel(object):
     
     def getFile(self, name, client):
         path, name = name.rsplit('/',1)
-        logging.info('%s / %s' % (path,name))
         f = dropBoxFile(name, path, client)
         return f
     
@@ -42,6 +41,7 @@ class FileModel(object):
         dirlist['files'] = [i['path'][1:] for i in filter(lambda x: 'mime_type' in x and x['mime_type'] == 'text/plain', data['contents'])]
         dirlist['dirs'] = [i['path'][1:] for i in filter(lambda x: x['is_dir'], data['contents'])]
         return dirlist
+
 
 class FileObject(object):
     def __init__(self, name, sdir,items):
@@ -181,10 +181,17 @@ class dropBoxFile( object ):
         self.handle.name = self.name
         self.handle.write(self.content)
         self.handle.seek(0)
-        self.client.put_file('dropbox', self.path, self.handle)
+        self.client.put_file('dropbox', self.dir, self.handle)
         self.handle.close()
         self.__addLinks()
         return self.__success(self.content)
+
+    def rename(self,newName):
+        self.client.file_move('dropbox', self.path, newName)
+        oldName = self.path
+        self.path = newName
+        self.dir, self.name = self.path.rsplit('/',1)
+        return self.__success("Renamed",{'oldURL':oldName,'newURL':newName,'newName':self.name})
 
     def __preSave(self):
         """docstring for _preSave"""

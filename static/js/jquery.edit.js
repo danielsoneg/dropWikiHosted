@@ -10,15 +10,24 @@ $(document).ready(function() {
            success: editCallback
         });
     });
+    $('#name').click(function() {
+        $(this).data('short',$(this).html());
+        $(this).html(window.location.pathname);
+    });
     $('#name').blur(function() {
         var newValue = $(this).html();
-        //alert("Sending: " +newValue);
-        $.ajax({
-           type: "POST",
-           url: window.location.pathname,
-           data: "name=" + newValue + "&action=rename",
-           success: renameCallback
-        });
+        if (newValue != window.location.pathname) {
+            //alert("Sending: " +newValue);
+            $.ajax({
+               type: "POST",
+               url: window.location.pathname,
+               data: "name=" + newValue + "&action=rename",
+               success: renameCallback
+            });
+        }
+        else {
+            $(this).html($(this).data('short'));
+        }
     });
     $('#message').click(function(){
        $(this).slideUp('200');
@@ -32,6 +41,7 @@ function renameCallback(data) {
     if (data.Code == 1) {
         showMessage("Successfully renamed " + data.oldURL + " to " + data.newURL, data.Code);
         history.pushState(null, null, data.newURL);
+        $('#name').text(data.newName);
     }
     else {
         showMessage(data.Message, data.Code);

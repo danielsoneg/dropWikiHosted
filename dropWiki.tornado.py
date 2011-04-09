@@ -66,7 +66,6 @@ class LoginHandler(BaseHandler):
         if self.get_argument('oauth_token',False):
             self.setAccess()
         else:
-            logging.info("Hello!")
             self.getAccess()
         
     def getAccess(self):
@@ -75,7 +74,6 @@ class LoginHandler(BaseHandler):
         sentpath = self.get_argument('next','/')
         self.set_secure_cookie('destpath',sentpath) 
         userAuthURL= Auth.dba.build_authorize_url(userToken,'http://localhost:8080/login')
-        logging.info(userAuthURL)
         self.redirect(userAuthURL)
         pass
     
@@ -116,7 +114,6 @@ class MainHandler(BaseHandler):
         return path
         
     def get(self,path):
-        logging.info("main")
         npath = self.__preflight(path)
         (t, ret) = Files.getPath(npath, self.dbc)
         getattr(self, 'get_%s' % t)(ret)
@@ -139,29 +136,30 @@ class MainHandler(BaseHandler):
     
     def post(self, path):
         if path == "": 
-            logging.info('no path')
             raise tornado.web.HTTPError(400)
         try: 
             action = self.get_argument('action')
         except:
-            logging.info('no action')
             raise tornado.web.HTTPError(400)
         if hasattr(self, 'post_%s' % action):
-            logging.info('Found action %s'% action)
             status = getattr(self, 'post_%s' %action)(path)
-            logging.info(status)
             self.write(status)
         else:
             raise tornado.web.HTTPError(400)
     
     def post_write(self,path):
-        logging.info('write')
         content = self.get_argument('text')
         content = tornado.escape.xhtml_unescape(content)
-        logging.info(content)
         f = Files.getFile(path,self.dbc)
         status = f.write(content)
         return status
+        
+    def post_rename(self,path):
+        newName = self.get_argument('name')
+        f = Files.getFile(path,self.dbc)
+        status = f.rename(newName)
+        return status
+    
 
 def main():
     tornado.options.parse_command_line()
