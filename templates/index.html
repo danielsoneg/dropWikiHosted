@@ -2,7 +2,7 @@
 <html lang="en"> 
 <head> 
 <meta charset=utf-8 /> 
-<title>Index</title> 
+<title>{{title}}</title> 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript"></script>
 <script src="/static/js/jquery.edit.js" type="text/javascript"></script>
 <link rel="stylesheet" href="/static/css/main.css" type="text/css"></link>
@@ -16,7 +16,7 @@
         </ul>
     </nav>
     <header>
-        <h1>Index</h1>
+        <h1>{{title}}</h1>{% if title != "Index" %}<a href='..'>&uarr;</a> {% end %}
     </header>
     <section id="filelist">
         <ul id="files">

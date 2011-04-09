@@ -45,6 +45,7 @@ class dbAuth(object):
         addconfig =  auth.Authenticator.load_config("config/apikeys.ini")
         config.update(addconfig)
         self.dba = auth.Authenticator(config)
+        self.baseToken = self.dba.obtain_request_token()
         self.tokens = {}
         self.user_tokens = {}
 
@@ -70,7 +71,7 @@ class LoginHandler(BaseHandler):
         
     def getAccess(self):
         userToken = Auth.dba.obtain_request_token()
-        Auth.tokens[userToken.key] = userToken
+        Auth.tokens[userToken.key] = userToken.to_string()
         sentpath = self.get_argument('next','/')
         self.set_secure_cookie('destpath',sentpath) 
         userAuthURL= Auth.dba.build_authorize_url(userToken,'http://localhost:8080/login')
@@ -79,9 +80,9 @@ class LoginHandler(BaseHandler):
     
     def setAccess(self):
         uid = self.get_argument('uid')
-        token = Auth.tokens[self.get_argument('oauth_token')]
+        token = Auth.baseToken.from_string(Auth.tokens[self.get_argument('oauth_token')])
         oauth_token = Auth.dba.obtain_access_token(token,'')
-        Auth.user_tokens[uid] = oauth_token
+        Auth.user_tokens[uid] = oauth_token.to_string()
         dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
         email = dbc.account_info().data['email']
         Users.addUser(uid,oauth_token,email)
@@ -103,7 +104,7 @@ class MainHandler(BaseHandler):
         if self.current_user not in Auth.user_tokens:
             self.set_secure_cookie("user", '')
             self.redirect("/login?next=%s"% self.request.full_url())
-        oauth_token = Auth.user_tokens[self.current_user]
+        oauth_token = Auth.baseToken.from_string(Auth.user_tokens[self.current_user])
         self.dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
         self.clear_cookie('destpath') 
 
@@ -116,20 +117,21 @@ class MainHandler(BaseHandler):
     def get(self,path):
         npath = self.__preflight(path)
         (t, ret) = Files.getPath(npath, self.dbc)
-        getattr(self, 'get_%s' % t)(ret)
+        getattr(self, 'get_%s' % t)(ret, path)
         
-    def get_index(self, flist):
-        self.render("templates/index.html", title="Hello", dirs=flist['dirs'], files=flist['files'])
+    def get_index(self, flist, path):
+        title = path if path != "" else "Index"
+        self.render("templates/index.html", title=title, dirs=flist['dirs'], files=flist['files'])
         #self.render("templates/blank.html", title="Hello", message="Hi there")
     
-    def get_text(self, f):
+    def get_text(self, f, path):
         self.render('templates/page.html', title=f.name, text=f.read())
 
     
-    def get_raw(self, resp):
+    def get_raw(self, resp, path):
         self.render("templates/blank.html", title="RAW", message=resp)
     
-    def get_go(self, url):
+    def get_go(self, url, path):
         """docstring for go"""
         self.redirect(url)
         pass

@@ -5,7 +5,6 @@ import os
 import re
 import tempfile
 import logging
-from dropbox import auth, client
 try: import simplejson as json
 except ImportError: import json
 
@@ -31,7 +30,8 @@ class FileModel(object):
         return (t, ret)
     
     def getFile(self, name, client):
-        path, name = name.rsplit('/',1)
+        path = ''
+        if '/' in name: path, name = name.rsplit('/',1)
         f = dropBoxFile(name, path, client)
         return f
     
