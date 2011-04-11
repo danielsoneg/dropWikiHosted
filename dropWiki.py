@@ -36,7 +36,7 @@ Files = files.FileModel()
 define("port", default=8080, help="run on the given port", type=int)
 
 Users = db.userDB() 
-
+auth.HTTP_DEBUG_LEVEL=10
 class dbAuth(object):
     """docstring for dbAuth"""
     def __init__(self):
@@ -74,7 +74,7 @@ class LoginHandler(BaseHandler):
         Auth.tokens[userToken.key] = userToken.to_string()
         sentpath = self.get_argument('next','/')
         self.set_secure_cookie('destpath',sentpath) 
-        userAuthURL= Auth.dba.build_authorize_url(userToken,'http://localhost:8080/login')
+        userAuthURL= Auth.dba.build_authorize_url(userToken,'http://p2.egd.im:8080/login')
         self.redirect(userAuthURL)
         pass
     
@@ -101,10 +101,12 @@ class LogoutHandler(BaseHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def prepare(self):
-        if self.current_user not in Auth.user_tokens:
+        if str(self.current_user) not in Auth.user_tokens.keys():
             self.set_secure_cookie("user", '')
             self.redirect("/login?next=%s"% self.request.full_url())
-        oauth_token = Auth.baseToken.from_string(Auth.user_tokens[self.current_user])
+            return
+        userToken = Auth.user_tokens[str(self.current_user)]
+        oauth_token = Auth.baseToken.from_string(userToken)
         self.dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
         self.clear_cookie('destpath') 
 
