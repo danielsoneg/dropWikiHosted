@@ -37,19 +37,17 @@ define("port", default=8080, help="run on the given port", type=int)
 
 Users = db.userDB() 
 auth.HTTP_DEBUG_LEVEL=10
+config = auth.Authenticator.load_config("config/config.ini")
+config.update(auth.Authenticator.load_config("config/apikeys.ini"))
+tokens = {}
+user_tokens = {}
+
 class dbAuth(object):
     """docstring for dbAuth"""
     def __init__(self):
         super(dbAuth, self).__init__()
-        config = auth.Authenticator.load_config("config/config.ini")
-        addconfig =  auth.Authenticator.load_config("config/apikeys.ini")
-        config.update(addconfig)
         self.dba = auth.Authenticator(config)
         self.baseToken = self.dba.obtain_request_token()
-        self.tokens = {}
-        self.user_tokens = {}
-
-Auth = dbAuth()    
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -70,19 +68,21 @@ class LoginHandler(BaseHandler):
             self.getAccess()
         
     def getAccess(self):
+        Auth = dbAuth()
         userToken = Auth.dba.obtain_request_token()
-        Auth.tokens[userToken.key] = userToken.to_string()
+        tokens[userToken.key] = userToken.to_string()
         sentpath = self.get_argument('next','/')
         self.set_secure_cookie('destpath',sentpath) 
-        userAuthURL= Auth.dba.build_authorize_url(userToken,'http://p2.egd.im:8080/login')
+        userAuthURL= Auth.dba.build_authorize_url(userToken,'http://localhost:8080/login')
         self.redirect(userAuthURL)
         pass
     
     def setAccess(self):
+        Auth = dbAuth()
         uid = self.get_argument('uid')
-        token = Auth.baseToken.from_string(Auth.tokens[self.get_argument('oauth_token')])
+        token = Auth.baseToken.from_string(tokens[self.get_argument('oauth_token')])
         oauth_token = Auth.dba.obtain_access_token(token,'')
-        Auth.user_tokens[uid] = oauth_token.to_string()
+        user_tokens[uid] = oauth_token.to_string()
         dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
         email = dbc.account_info().data['email']
         Users.addUser(uid,oauth_token,email)
@@ -101,11 +101,12 @@ class LogoutHandler(BaseHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def prepare(self):
-        if str(self.current_user) not in Auth.user_tokens.keys():
+        if str(self.current_user) not in user_tokens.keys():
             self.set_secure_cookie("user", '')
             self.redirect("/login?next=%s"% self.request.full_url())
             return
-        userToken = Auth.user_tokens[str(self.current_user)]
+        userToken = user_tokens[str(self.current_user)]
+        Auth = dbAuth()
         oauth_token = Auth.baseToken.from_string(userToken)
         self.dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
         self.clear_cookie('destpath') 
