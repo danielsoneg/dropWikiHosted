@@ -17,7 +17,7 @@ from dropbox import auth, client
 from db import SQLite as db
 import files
 
-define("port", default=8080, help="run on the given port", type=int)
+define("port", default=8000, help="run on the given port", type=int)
 
 Users = db.userDB() 
 auth.HTTP_DEBUG_LEVEL=10
