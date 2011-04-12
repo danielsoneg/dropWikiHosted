@@ -103,8 +103,18 @@ class MainHandler(BaseHandler):
         getattr(self, 'get_%s' % t)(ret, path)
         
     def get_index(self, flist, path):
-        title = path if path != "" else "Index"
-        self.render("templates/index.html", title=title, dirs=flist['dirs'], files=flist['files'])
+        if path != '':
+            shortpath = path.split('/')
+            title = shortpath.pop() 
+            path = []
+            fullpath = '/'
+            for p in shortpath:
+                fullpath = fullpath + p + '/'
+                path.append(fullpath)
+        else:
+            path = []
+            title = 'DropBox'
+        self.render("templates/index.html", title=title, path=path, dirs=flist['dirs'], files=flist['files'])
     
     def get_text(self, f, path):
         self.render('templates/page.html', dir=f.dir, title=f.name, text=f.read())
