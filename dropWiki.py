@@ -104,8 +104,9 @@ class MainHandler(BaseHandler):
         
     def get_index(self, flist, path):
         if path != '':
+            path = path.rstrip('/')
             shortpath = path.split('/')
-            title = shortpath.pop() 
+            title = shortpath.pop()
             path = []
             fullpath = '/'
             for p in shortpath:
