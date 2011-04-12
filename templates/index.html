@@ -10,7 +10,7 @@
 </head>
 <body>
     <header>
-        {% if len(path) >= 0 and title != 'DropBox' %}<a href='/'>DropBox/</a>{% for p in path %}<a href='{{p}}'>{{p[p.rfind('/',0,-1)+1:]}}</a>{% end %}{% end %}<h1>{{title}}</h1>
+        {% if len(path) >= 0 and title != 'DropBox' %}<a href='/'>DropBox/</a>{% for p in path %}<a href='{{p}}'>{{p[p.rfind('/',0,-1)+1:-1]}}</a>{% end %}{% end %}<h1>{{title}}</h1>
     </header>
     <section id="filelist">
         <ul id="files">
