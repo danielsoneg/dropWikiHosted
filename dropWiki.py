@@ -60,7 +60,7 @@ class LoginHandler(BaseHandler):
         tokens[userToken.key] = userToken.to_string()
         sentpath = self.get_argument('next','/')
         self.set_secure_cookie('destpath',sentpath) 
-        userAuthURL= self.Auth.dba.build_authorize_url(userToken,'%s%s' %(self.request.headers['Host'],self.get_login_url()))
+        userAuthURL= self.Auth.dba.build_authorize_url(userToken,'http://%s%s' %(self.request.headers['Host'],self.get_login_url()))
         self.redirect(userAuthURL)
         pass
     
