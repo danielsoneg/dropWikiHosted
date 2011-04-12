@@ -12,6 +12,7 @@ $(document).ready(function() {
     });
     $('#name').click(function() {
         $(this).data('short',$(this).html());
+        $('#dir').hide();
         $(this).html(window.location.pathname);
     });
     $('#name').blur(function() {
@@ -27,6 +28,7 @@ $(document).ready(function() {
         }
         else {
             $(this).html($(this).data('short'));
+            $('#dir').show();
         }
     });
     $('#message').click(function(){
@@ -34,26 +36,39 @@ $(document).ready(function() {
     });
 });
 
-
 function renameCallback(data) {
     data = jQuery.parseJSON(data);
     //alert(data.Message);
-    if (data.Code == 1) {
-        showMessage("Successfully renamed " + data.oldURL + " to " + data.newURL, data.Code);
+    if (data.Code != 0) {
         history.pushState(null, null, data.newURL);
         $('#name').text(data.newName);
+        $('#dir').text(data.newDir + '/');
+        $('#dir').attr('href',data.newDir);
+        $('#dir').show();
+        if (data.Code == 1) {
+        showMessage("Successfully renamed " + data.oldURL + " to " + data.newURL, data.Code);
+        }
+        else if (data.Code == 2) {
+            showMessage('Loaded ' + data.newURL);
+            swapContent(data);
+        }
     }
     else {
         showMessage(data.Message, data.Code);
     }
 }
 
+function swapContent(data) {
+    $('#editable').html(data.Message);
+    $('a').click(function(){ window.location=$(this).attr('href'); });
+}
+
+
 function editCallback(data) {
     data = jQuery.parseJSON(data);
     //alert(data.Message);
     if (data.Code == 1) {
-        $('#editable').html(data.Message);
-        $('a').click(function(){ window.location=$(this).attr('href'); });        
+        swapContent(data);
     }
     else {
         showMessage(data.Message, data.Code);

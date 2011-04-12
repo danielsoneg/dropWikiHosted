@@ -1,42 +1,27 @@
 #!/usr/bin/env python
-#
-# Copyright 2009 Facebook
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
+# Tornado
 import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.escape
-import os
 from tornado.options import define, options
-
-from db import SQLite as db
-
-from dropbox import auth, client
+# Base System
+import os
+import logging
 try: import simplejson as json
 except ImportError: import json
+# Dropbox
+from dropbox import auth, client
+# Ours
+from db import SQLite as db
 import files
-
-import logging
-
-Files = files.FileModel()
 
 define("port", default=8080, help="run on the given port", type=int)
 
 Users = db.userDB() 
 auth.HTTP_DEBUG_LEVEL=10
+
 config = auth.Authenticator.load_config("config/config.ini")
 config.update(auth.Authenticator.load_config("config/apikeys.ini"))
 tokens = {}
@@ -61,6 +46,9 @@ class ClassName(object):
 
 class LoginHandler(BaseHandler):    
     """docstring for LoginHandler"""
+    def prepare(self):
+        self.Auth = dbAuth()
+    
     def get(self):
         if self.get_argument('oauth_token',False):
             self.setAccess()
@@ -68,22 +56,20 @@ class LoginHandler(BaseHandler):
             self.getAccess()
         
     def getAccess(self):
-        Auth = dbAuth()
-        userToken = Auth.dba.obtain_request_token()
+        userToken = self.Auth.dba.obtain_request_token()
         tokens[userToken.key] = userToken.to_string()
         sentpath = self.get_argument('next','/')
         self.set_secure_cookie('destpath',sentpath) 
-        userAuthURL= Auth.dba.build_authorize_url(userToken,'http://localhost:8080/login')
+        userAuthURL= self.Auth.dba.build_authorize_url(userToken,'%s%s' %(self.request.headers['Host'],self.get_login_url()))
         self.redirect(userAuthURL)
         pass
     
     def setAccess(self):
-        Auth = dbAuth()
         uid = self.get_argument('uid')
-        token = Auth.baseToken.from_string(tokens[self.get_argument('oauth_token')])
-        oauth_token = Auth.dba.obtain_access_token(token,'')
+        token = self.Auth.baseToken.from_string(tokens[self.get_argument('oauth_token')])
+        oauth_token = self.Auth.dba.obtain_access_token(token,'')
         user_tokens[uid] = oauth_token.to_string()
-        dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
+        dbc = client.DropboxClient(self.Auth.dba.config['server'], self.Auth.dba.config['content_server'], self.Auth.dba.config['port'], self.Auth.dba, oauth_token)
         email = dbc.account_info().data['email']
         Users.addUser(uid,oauth_token,email)
         self.set_secure_cookie("user", uid)
@@ -94,42 +80,40 @@ class LoginHandler(BaseHandler):
 class LogoutHandler(BaseHandler):    
     """docstring for LoginHandler"""
     def get(self):
-        
         self.clear_all_cookies()
         self.render('templates/blank.html', title='Logged Out', message="You've been logged out!")
 
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def prepare(self):
+        logging.info(self.get_login_url())
         if str(self.current_user) not in user_tokens.keys():
             self.set_secure_cookie("user", '')
-            self.redirect("/login?next=%s"% self.request.full_url())
+            self.redirect("%s?next=%s"% (self.get_login_url(),self.request.full_url()))
             return
         userToken = user_tokens[str(self.current_user)]
-        Auth = dbAuth()
-        oauth_token = Auth.baseToken.from_string(userToken)
-        self.dbc = client.DropboxClient(Auth.dba.config['server'], Auth.dba.config['content_server'], Auth.dba.config['port'], Auth.dba, oauth_token)
-        self.clear_cookie('destpath') 
-
-        
-    def __preflight(self, path):
-        """Catch-all function to fix paths before we hand them off"""
-        path = path.replace('%20',' ')
-        return path
-        
+        self.Auth = dbAuth()
+        oauth_token = self.Auth.baseToken.from_string(userToken)
+        self.dbc = client.DropboxClient(self.Auth.dba.config['server'], self.Auth.dba.config['content_server'], self.Auth.dba.config['port'], self.Auth.dba, oauth_token)
+        self.clear_cookie('destpath')
+        self.Files = files.FileModel(self.dbc)
+    
     def get(self,path):
-        npath = self.__preflight(path)
-        (t, ret) = Files.getPath(npath, self.dbc)
+        (t, ret) = self.Files.getPath(path)
         getattr(self, 'get_%s' % t)(ret, path)
         
     def get_index(self, flist, path):
         title = path if path != "" else "Index"
         self.render("templates/index.html", title=title, dirs=flist['dirs'], files=flist['files'])
-        #self.render("templates/blank.html", title="Hello", message="Hi there")
     
     def get_text(self, f, path):
-        self.render('templates/page.html', title=f.name, text=f.read())
-
+        self.render('templates/page.html', dir=f.dir, title=f.name, text=f.read())
+    
+    def get_new(self, f, path):
+        if not path.endswith('.txt'):
+            self.redirect('/%s.txt' % path)
+            return
+        self.render('templates/page.html', dir=f.dir, title=f.name, text='')
     
     def get_raw(self, resp, path):
         self.render("templates/blank.html", title="RAW", message=resp)
@@ -150,21 +134,31 @@ class MainHandler(BaseHandler):
             status = getattr(self, 'post_%s' %action)(path)
             self.write(status)
         else:
+            logging.error('Asked for invalid action: %s' % action)
             raise tornado.web.HTTPError(400)
     
     def post_write(self,path):
-        content = self.get_argument('text')
-        content = tornado.escape.xhtml_unescape(content)
-        f = Files.getFile(path,self.dbc)
-        status = f.write(content)
+        content = tornado.escape.xhtml_unescape(self.get_argument('text'))
+        (t, f) = self.Files.getPath(path)
+        if t == 'text' or t == 'new':
+            status = f.write(content)
+        else:
+            status = self.__error(t)
         return status
         
     def post_rename(self,path):
-        newName = self.get_argument('name')
-        f = Files.getFile(path,self.dbc)
-        status = f.rename(newName)
+        newPath = self.get_argument('name')
+        (t, f) = self.Files.getPath(path)
+        if t == 'text':
+            status = f.rename(newPath)
+        else:
+            status = self.__error(t)
         return status
     
+    def __error(t):
+        logging.info(t)
+        status = json.dumps({'Code':0,'Message':t})
+        return status
 
 def main():
     tornado.options.parse_command_line()
