@@ -65,7 +65,7 @@ class dropBoxFile( object ):
         self.__stripLinks()
         self.handle = tempfile.SpooledTemporaryFile()
         self.handle.name = self.name
-        self.handle.write(self.content)
+        self.handle.write(self.content.encode('ascii','replace'))
         self.handle.seek(0)
         self.client.put_file('dropbox', self.dir, self.handle)
         self.handle.close()

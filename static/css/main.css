@@ -1,5 +1,7 @@
 body {
-    background: #eee;
+    background: #fff;
+    padding: 0;
+    margin: 0;
     
 }
 nav {
@@ -34,9 +36,9 @@ nav a {
 
 #filelist {
     display: block;
-    padding: 10px;
+    padding: 0;
     margin: 0 auto;
-    width: 700px;
+    width: 100%;
     background: #fff;
     -moz-border-radius: 0px 0px 3px 3px;
     border-radius: 0px 0px 3px 3px;
@@ -51,7 +53,7 @@ nav a {
 }
 
 #filelist ul li {
-    width: 700px;
+    width: 100%;
     margin: 0;
     border-bottom: 1px dashed #f0f0f0;
     -moz-border-radius: 3px;
@@ -64,7 +66,7 @@ nav a {
     padding: 10px;
     width: 650px;
     height: 1.5em;
-    font-size: 2em;
+    font-size: 1.3em;
     text-decoration: none;
     color: #555;
 }
@@ -104,15 +106,14 @@ nav a {
 
 #editable {
     display: block;
-    padding: 10px;
+    padding: 2%;
     font-size: 18px;
     color: #333;
     white-space: pre-wrap;
     overflow: auto;
-    width: 700px;
+    width: 96%;
     min-height: 600px;
     background: #fff;
-    margin: 0 auto;
     -moz-border-radius: 0px 0px 3px 3px;
     border-radius: 0px 0px 3px 3px;
 }
@@ -124,26 +125,44 @@ a:hover {
     cursor: pointer !important;
 }
 
+
 #message {
     display: none;
     padding: 10px;
-    font-size: 18px;
+    font-size: 12px;
     color: #333;
     white-space: pre-wrap;
     overflow: none;
     width: 700px;
-    background: #fff;
+    background: #eee;
     margin: 0 auto;
+}
+
+#options {
+    height: 12px;
+    padding-right: 10px;
+    float: right;
+    display: block;
+    margin:0;
+    color: #ddd;
+    margin-bottom: -12px;
+    }
+#options:hover {
+    color: #333;
+}
+
+.mono {
+    font-family: monospace;
 }
 
 header {
     display: block;
-    padding: 10px 10px 0px 10px;
-    font-size: 18px;
+    padding: 2% 2% 0px 2%;
+    font-size: 12px;
     color: #ccc;
     white-space: pre-wrap;
     overflow: none;
-    width: 700px;    
+    width: 100%;    
     background: #fff;
     margin: 0 auto;
     background: #fff;

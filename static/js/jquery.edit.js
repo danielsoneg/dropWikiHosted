@@ -34,6 +34,10 @@ $(document).ready(function() {
     $('#message').click(function(){
        $(this).slideUp('200');
     });
+    $('#mono').click(function(){
+        $('#editable').toggleClass('mono');
+        if ($(this).text() == 'Fix') {$(this).text('Var');} else {$(this).text('Fix');};
+    });
 });
 
 function renameCallback(data) {
