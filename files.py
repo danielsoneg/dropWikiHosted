@@ -20,7 +20,7 @@ class FileModel(object):
         if 'is_dir' in resp.data and resp.data['is_dir']:
             t = 'index'
             ret = self.listDir(resp)
-        elif 'mime_type' in resp.data and resp.data['mime_type'] == 'text/plain':
+        elif 'mime_type' in resp.data and resp.data['mime_type'].split('/')[0] == 'text':
             #logging.info(path)
             t = 'text'
             ret = self.getFile(path[1:])
@@ -36,7 +36,7 @@ class FileModel(object):
     
     def listDir(self,resp):
         dirlist = {}
-        dirlist['files'] = [i['path'][1:] for i in filter(lambda x: 'mime_type' in x and x['mime_type'] == 'text/plain', resp.data['contents'])]
+        dirlist['files'] = [i['path'][1:] for i in filter(lambda x: 'mime_type' in x and x['mime_type'].split('/')[0] == 'text', resp.data['contents'])]
         dirlist['dirs'] = [i['path'][1:] for i in filter(lambda x: x['is_dir'], resp.data['contents'])]
         return dirlist
 
