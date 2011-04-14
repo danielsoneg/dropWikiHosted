@@ -20,7 +20,7 @@ import files
 define("port", default=8000, help="run on the given port", type=int)
 
 Users = db.userDB() 
-auth.HTTP_DEBUG_LEVEL=10
+#auth.HTTP_DEBUG_LEVEL=10
 
 config = auth.Authenticator.load_config("config/config.ini")
 config.update(auth.Authenticator.load_config("config/apikeys.ini"))
@@ -86,7 +86,7 @@ class LogoutHandler(BaseHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def prepare(self):
-        logging.info(self.get_login_url())
+        #logging.info(self.get_login_url())
         if str(self.current_user) not in user_tokens.keys():
             self.set_secure_cookie("user", '')
             self.redirect("%s?next=%s"% (self.get_login_url(),self.request.full_url()))
@@ -167,7 +167,7 @@ class MainHandler(BaseHandler):
         return status
     
     def __error(t):
-        logging.info(t)
+        #logging.info(t)
         status = json.dumps({'Code':0,'Message':t})
         return status
 

@@ -16,12 +16,12 @@ class FileModel(object):
         """docstring for getPath"""
         path = "/%s" % path
         resp = self.client.metadata("dropbox", path)
-        logging.info("%s , %s" % (resp.data, resp.status))
+        #logging.info("%s , %s" % (resp.data, resp.status))
         if 'is_dir' in resp.data and resp.data['is_dir']:
             t = 'index'
             ret = self.listDir(resp)
         elif 'mime_type' in resp.data and resp.data['mime_type'] == 'text/plain':
-            logging.info(path)
+            #logging.info(path)
             t = 'text'
             ret = self.getFile(path[1:])
         elif 'error' in resp.data and resp.status == 404:
@@ -31,7 +31,7 @@ class FileModel(object):
     
     def getFile(self, name):
         (path, name) = name.rsplit('/',1) if '/' in name else ('', name)
-        logging.info("%s / %s" % (path, name))
+        #logging.info("%s / %s" % (path, name))
         return dropBoxFile(name, path, self.client)
     
     def listDir(self,resp):
@@ -50,9 +50,10 @@ class dropBoxFile( object ):
 
     def read(self):
         self.handle = self.client.get_file("dropbox", self.path)
-        content = self.handle.read()
+        self.content = self.handle.read()
         self.handle.close()
-        return content
+        self.__addLinks()
+        return self.content
 
     def test(self):
         self.handle = self.client.get_file("dropbox", self.path)
