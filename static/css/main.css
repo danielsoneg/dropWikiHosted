@@ -2,7 +2,7 @@ body {
     background: #fff;
     padding: 0;
     margin: 0;
-    
+    width: 100%;
 }
 nav {
     display: block;
@@ -64,7 +64,7 @@ nav a {
 #filelist ul li a {
     display:inline-block;
     padding: 10px;
-    width: 650px;
+    width: 80%;
     height: 1.5em;
     font-size: 1.3em;
     text-decoration: none;
@@ -128,12 +128,12 @@ a:hover {
 
 #message {
     display: none;
-    padding: 10px;
+    padding: 2%;
     font-size: 12px;
     color: #333;
     white-space: pre-wrap;
     overflow: none;
-    width: 700px;
+    width: 98%;
     background: #eee;
     margin: 0 auto;
 }
@@ -162,7 +162,7 @@ header {
     color: #ccc;
     white-space: pre-wrap;
     overflow: none;
-    width: 100%;    
+    width: 96%;    
     background: #fff;
     margin: 0 auto;
     background: #fff;
