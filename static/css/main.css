@@ -148,7 +148,7 @@ a:hover {
     margin-bottom: -12px;
     }
 #options:hover {
-    color: #333;
+    background: #333;
 }
 
 .mono {

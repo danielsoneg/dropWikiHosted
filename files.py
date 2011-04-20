@@ -16,7 +16,7 @@ class FileModel(object):
         """docstring for getPath"""
         path = "/%s" % path
         resp = self.client.metadata("dropbox", path)
-        #logging.info("%s , %s" % (resp.data, resp.status))
+        logging.info("%s , %s" % (resp.data, resp.status))
         if 'is_dir' in resp.data and resp.data['is_dir']:
             t = 'index'
             ret = self.listDir(resp)

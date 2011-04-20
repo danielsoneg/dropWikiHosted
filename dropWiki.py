@@ -100,10 +100,7 @@ class MainHandler(BaseHandler):
     
     def get(self,path):
         (t, ret) = self.Files.getPath(path)
-        getattr(self, 'get_%s' % t)(ret, path)
-        
-    def get_index(self, flist, path):
-        if path != '':
+        if path != '' and path != '/':
             path = path.rstrip('/')
             shortpath = path.split('/')
             title = shortpath.pop()
@@ -115,16 +112,16 @@ class MainHandler(BaseHandler):
         else:
             path = []
             title = 'DropBox'
+        getattr(self, 'get_%s' % t)(ret, title, path)
+        
+    def get_index(self, flist, title, path):
         self.render("templates/index.html", title=title, path=path, dirs=flist['dirs'], files=flist['files'])
     
-    def get_text(self, f, path):
-        self.render('templates/page.html', dir=f.dir, title=f.name, text=f.read())
+    def get_text(self, f, title, path):
+        self.render('templates/page.html', path=path, title=f.name, text=f.read())
     
-    def get_new(self, f, path):
-        if not path.endswith('.txt'):
-            self.redirect('/%s.txt' % path)
-            return
-        self.render('templates/page.html', dir=f.dir, title=f.name, text='')
+    def get_new(self, f, title, path):
+        self.render('templates/page.html', path=path, title=f.name, text='')
     
     def get_raw(self, resp, path):
         self.render("templates/blank.html", title="RAW", message=resp)

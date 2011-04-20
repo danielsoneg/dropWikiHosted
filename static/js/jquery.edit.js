@@ -38,6 +38,12 @@ $(document).ready(function() {
         $('#editable').toggleClass('mono');
         if ($(this).text() == 'Fix') {$(this).text('Var');} else {$(this).text('Fix');};
     });
+    $('#sizeup').click(function(){
+       $('#editable').css('font-size',parseInt($('#editable').css('font-size').slice(0,-2),10)+1 + 'px');
+    });
+    $('#sizedown').click(function(){
+       $('#editable').css('font-size',parseInt($('#editable').css('font-size').slice(0,-2),10)-1 + 'px');
+    });
 });
 
 function renameCallback(data) {
