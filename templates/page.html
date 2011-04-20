@@ -9,8 +9,8 @@
 <link rel="shortcut icon" href="/static/favicon.ico"></link>
 </head>
 <body>
-    <header><a href='{{dir}}' id='dir'>{{dir}}/</a><h1 id="name" contenteditable="true">{{title}}</h1></header>
-    <section id="options"><span id='mono'>Fix</span></section>
+    <header><div id="dir">{% if len(path) >= 0 and title != 'DropBox' %}<a href='/'>DropBox/</a>{% for p in path %}<a href='{{p}}'>{{p[p.rfind('/',0,-1)+1:]}}</a>{% end %}{% end %}</div><h1 id="name" contenteditable="true">{{title}}</h1></header>
+    <section id="options"><span id='mono'>Fix</span> | <span id="sizeup">+</span>/<span id='sizedown'>-</span></section>
     <section id="message"></section>
     <section id="editable" contenteditable="true">{{ text }}</section>
 </body>
